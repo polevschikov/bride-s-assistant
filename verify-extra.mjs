@@ -1,9 +1,13 @@
 import { chromium } from '@playwright/test';
 import { spawn, spawnSync } from 'node:child_process';
+import fs from 'node:fs';
 
+fs.mkdirSync('test-output', { recursive: true });
+fs.rmSync('test-output/verify-extra.db', { force: true });
+const testEnv = { ...process.env, DATABASE_PATH: 'test-output/verify-extra.db', MEDIA_PATH: 'test-output/verify-extra-uploads' };
 const children = [
-  spawn(process.execPath, ['server.mjs'], { stdio: 'ignore' }),
-  spawn(process.execPath, ['node_modules/vite/bin/vite.js', '--host', '0.0.0.0'], { stdio: 'ignore' }),
+  spawn(process.execPath, ['server.mjs'], { stdio: 'ignore', env: testEnv }),
+  spawn(process.execPath, ['node_modules/vite/bin/vite.js', '--host', '0.0.0.0'], { stdio: 'ignore', env: testEnv }),
 ];
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 let browser;
@@ -41,7 +45,13 @@ async function chooseBranch(page, name) {
 }
 
 async function question(page, title, number, total = 5) {
-  await page.getByRole('heading', { name: title, exact: true }).waitFor();
+  try {
+    await page.getByRole('heading', { name: title, exact: true }).waitFor();
+  } catch (error) {
+    console.error('Неожиданный экран квиза:', await page.locator('body').innerText());
+    await page.screenshot({ path: `test-output/quiz-unexpected-${number}.png`, fullPage: true });
+    throw error;
+  }
   const actual = await page.locator('.quiz-meta span').first().textContent();
   const expected = `ВОПРОС ${number} ИЗ ${total}`;
   if (actual !== expected) throw new Error(`${title}: ожидалось «${expected}», получено «${actual}»`);

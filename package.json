@@ -12,6 +12,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1163.0",
     "@fontsource/noto-sans": "^5.3.0",
     "@fontsource/noto-serif": "^5.3.0",
     "@hookform/resolvers": "^5.2.2",

@@ -12,6 +12,7 @@ import '@fontsource/noto-sans/cyrillic-500.css'
 import '@fontsource/noto-sans/latin-600.css'
 import '@fontsource/noto-sans/cyrillic-600.css'
 import './index.css'
+import './workspace.css'
 import App from './App.tsx'
 
 createRoot(document.getElementById('root')!).render(

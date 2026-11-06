@@ -2,9 +2,12 @@ import { chromium } from '@playwright/test';
 import { spawn, spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 
+fs.mkdirSync('test-output', { recursive: true });
+fs.rmSync('test-output/verify.db', { force: true });
+const testEnv = { ...process.env, DATABASE_PATH: 'test-output/verify.db', MEDIA_PATH: 'test-output/verify-uploads' };
 const children = [
-  spawn(process.execPath, ['server.mjs'], { cwd: process.cwd(), stdio: 'inherit' }),
-  spawn(process.execPath, ['node_modules/vite/bin/vite.js', '--host', '0.0.0.0'], { cwd: process.cwd(), stdio: 'inherit' }),
+  spawn(process.execPath, ['server.mjs'], { cwd: process.cwd(), stdio: 'inherit', env: testEnv }),
+  spawn(process.execPath, ['node_modules/vite/bin/vite.js', '--host', '0.0.0.0'], { cwd: process.cwd(), stdio: 'inherit', env: testEnv }),
 ];
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 let browser;
