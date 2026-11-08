@@ -57,7 +57,7 @@ E2E-скрипты запускать **последовательно**: все
 
 ## Ручной деплой на REG.RU
 
-CI/CD нет. Публикация выполняется вручную из `main`.
+GitHub CI и защита main включены; результаты запусков — tasks/github-ci-protection.md. Автодеплоя нет. Публикация — отдельное разрешённое действие для точного проверенного commit; процесс и версии описаны в workflow.md и releases.md. Команды ниже — справочник будущей разрешённой выкладки, не текущее поручение менять сервер.
 
 - Сервер: `root@193.227.241.70`.
 - Код: `/opt/bride-assistant`.
@@ -82,7 +82,9 @@ chown www-data:www-data "$BACKUP"
 
 ```bash
 cd /opt/bride-assistant
-git pull --ff-only origin main
+: "${RELEASE_COMMIT:?Укажите точный проверенный commit разрешённого выпуска}"
+git fetch origin
+git switch --detach "$RELEASE_COMMIT"
 npm ci
 npm run build
 nginx -t

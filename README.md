@@ -4,6 +4,9 @@
 
 ## Запуск
 
+Для агента: `AGENTS.md`. Порядок работы и ветки: `docs/workflow.md`; при сбое: `docs/recovery.md`; память функций: `docs/project-map.md`; версии: `docs/releases.md`.
+Единая локальная проверка: `npm run check` (сборка, API/сохранность SQLite, три E2E). Подробнее: `docs/testing.md`.
+
 ```bash
 npm install
 copy .env.example .env
