@@ -9,7 +9,10 @@
     "start": "cross-env NODE_ENV=production node server.mjs",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test": "node --test tests/api.test.mjs",
+    "test:e2e": "node verify.mjs && node verify-extra.mjs && node verify-workspace.mjs",
+    "check": "node scripts/check.mjs"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1163.0",

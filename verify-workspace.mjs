@@ -1,3 +1,5 @@
+import { assertLocalTestPortsFree, isolatedTestEnv } from './scripts/test-env.mjs';
+await assertLocalTestPortsFree();
 import { chromium } from '@playwright/test';
 import { spawn, spawnSync } from 'node:child_process';
 import fs from 'node:fs';
@@ -7,15 +9,14 @@ const output = 'test-output';
 fs.mkdirSync(output, { recursive: true });
 fs.rmSync(`${output}/verify-workspace.db`, { force: true });
 fs.rmSync(`${output}/verify-workspace-uploads`, { recursive: true, force: true });
-const env = {
-  ...process.env,
+const env = isolatedTestEnv({
   DATABASE_PATH: `${output}/verify-workspace.db`,
   MEDIA_PATH: `${output}/verify-workspace-uploads`,
   ADMIN_ACCESS_CODE: 'workspace-admin',
-};
+});
 const children = [
   spawn(process.execPath, ['server.mjs'], { stdio: 'ignore', env }),
-  spawn(process.execPath, ['node_modules/vite/bin/vite.js', '--host', '0.0.0.0'], { stdio: 'ignore', env }),
+  spawn(process.execPath, ['node_modules/vite/bin/vite.js', '--host', '127.0.0.1', '--strictPort'], { stdio: 'ignore', env }),
 ];
 const apiRoot = 'http://localhost:3001';
 const siteRoot = 'http://localhost:3000';
@@ -45,7 +46,7 @@ async function request(path, { token, method = 'GET', body, expected = 200 } = {
 }
 
 function track(page) {
-  page.on('console', message => { if (message.type() === 'error') errors.push(message.text()); });
+  page.on('console', message => { if (message.type() === 'error') errors.push({ text: message.text(), location: message.location() }); });
   page.on('pageerror', error => errors.push(error.message));
   page.on('response', response => { if (response.status() === 404) notFound.push(response.url()); });
 }
@@ -236,8 +237,14 @@ try {
   const pixel = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=', 'base64');
   await page.locator('input[type=file]').setInputFiles({ name: 'workspace-pixel.png', mimeType: 'image/png', buffer: pixel });
   await page.getByLabel('Описание для доступности').fill('Тестовый прозрачный пиксель');
+  // Finish the UI thumbnail request before deleting its file; otherwise this
+  // test can remove the fixture while the browser is still requesting it.
+  const thumbnailLoaded = page.waitForResponse(response => new URL(response.url()).pathname.endsWith('-workspace-pixel.png'));
   await page.getByRole('button', { name: 'Загрузить', exact: true }).click();
   await page.getByText('Изображение загружено', { exact: true }).waitFor();
+  const thumbnail = await thumbnailLoaded;
+  assert.equal(thumbnail.status(), 200, 'Uploaded thumbnail must load before deletion');
+  await thumbnail.finished();
   let media = await request('/api/admin/media', { token: adminToken });
   assert.equal(media.length, 1);
   const uploaded = await fetch(new URL(media[0].url, apiRoot));

@@ -1,6 +1,24 @@
 # Карта проекта
 
-Корень репозитория — `app/`. Рабочая ветка — `main`.
+Корень репозитория — `app/`. Интеграционная ветка — `main`; задачи выполняются в отдельных ветках по workflow.md.
+
+## Память функций: адресный вход
+
+Срез локального кода от 9ba0440, 08.11.2026; проверки текущей настройки — docs/tasks/autonomous-workflow.md. Таблица — навигация по коду, не гарантия неизменного интерфейса или текущего PASS. При расхождении агент самостоятельно исследует затронутую функцию и обновляет запись с commit/окружением. Не создавать вторую параллельную карту; читать только нужные строки и связанные разделы.
+
+| Функция | Код | API / данные | Проверка |
+|---|---|---|---|
+| Главная, публичный контент | src/SiteHome.tsx, src/App.tsx | /api/public/config; опубликованные pages/settings | verify-workspace.mjs: CMS и публичные страницы |
+| Квиз A/B, результат | src/App.tsx, src/data.ts, kviz-variant-b-tree.md | /api/projects; projects.answers/result | verify.mjs, verify-extra.mjs: ветки, вопросы, сохранение |
+| Планер | src/App.tsx, src/Account.tsx | /api/projects; projects.tasks, шаблон в CMS | все три verify-набора по своим сценариям |
+| Партнёр и компромиссы | src/App.tsx, server.mjs | /api/partners; partners | verify-extra.mjs |
+| Заказ и тестовая оплата | src/App.tsx, server.mjs | /api/orders, sandbox/payment-маршруты; orders/payments/events | verify.mjs: paid; verify-extra.mjs: cancelled |
+| Кабинет и демо-вход | src/Account.tsx, server.mjs | /api/auth/demo, /api/account; clients/client_sessions | verify-workspace.mjs |
+| Заявки/клиенты/бонусы | src/admin/OrdersClients.tsx, src/admin/api.ts | /api/admin/*; clients/orders/wallet_transactions | verify-workspace.mjs |
+| CMS и медиа | src/admin/Editors.tsx, src/admin/Admin.tsx, storage.mjs | /api/admin/*; pages/quiz/planner и uploads | verify-workspace.mjs |
+| Запуск, SQLite и сохранность | dev.mjs, server.mjs | /api/health; DATABASE_PATH, WAL | tests/api.test.mjs; сборка npm run build |
+
+Новые полезные знания добавлять в соответствующий раздел по ходу задачи: условие/ревизия, факт, ссылка на проверку, ограничения. Временные ID, токены, секреты и координаты кликов не сохранять. Данные задачи и неудачные гипотезы — в docs/tasks/, а не в общей карте.
 
 ## Структура
 
